@@ -10,8 +10,9 @@ function debugLog(...messages: any[]) {
   // figma.notify(messages.join(" "));
 }
 
-async function main() {
-  // 現在選択されているノードを取得
+// メインの処理を関数として定義
+async function convertStickyToShape() {
+  // 現在の処理をここに移動
   const selection = figma.currentPage.selection;
   debugLog("Selected nodes:", selection.map(node => node.name));
 
@@ -25,27 +26,31 @@ async function main() {
   if (stickyNodes.length === 0) {
     figma.notify("No sticky notes found. Please select sticky notes in FigJam.");
     debugLog("No sticky nodes in selection. Exiting plugin.");
-    figma.closePlugin();
     return;
   }
 
   // 選択中のすべてのStickyについて処理
   for (const sticky of stickyNodes) {
+    // 付箋の絶対座標を取得
+    const absolutePosition = sticky.absoluteTransform;
+    const absoluteX = absolutePosition[0][2];
+    const absoluteY = absolutePosition[1][2];
+
     debugLog(`Processing sticky: ${sticky.name}`, {
       text: sticky.text.characters,
-      x: sticky.x,
-      y: sticky.y
+      relativeX: sticky.x,
+      relativeY: sticky.y,
+      absoluteX,
+      absoluteY
     });
 
     // Shape with text（図形 + テキスト）を作成
     const shapeWithText = figma.createShapeWithText();
-
-    // 図形のタイプを SQUARE（四角形）に設定
     shapeWithText.shapeType = "SQUARE";
 
-    // Sticky の位置を参考に、少しずらして配置
-    shapeWithText.x = sticky.x + 100;
-    shapeWithText.y = sticky.y + 100;
+    // 絶対座標を使用して配置
+    shapeWithText.x = absoluteX + 100;
+    shapeWithText.y = absoluteY + 100;
 
     // Sticky のテキストを Shape with text にコピーする
     debugLog("Loading font for shapeWithText.text...");
@@ -62,8 +67,18 @@ async function main() {
   }
 
   debugLog("All sticky nodes have been processed. Closing plugin.");
-  figma.closePlugin();
 }
 
-// 実行
-main();
+// プラグインのエントリーポイント
+figma.showUI(__html__, { 
+  width: 260, 
+  height: 220,
+  themeColors: true
+});
+
+// UIからのメッセージを受け取る
+figma.ui.onmessage = async (msg) => {
+  if (msg.type === 'convert-sticky') {
+    await convertStickyToShape();
+  }
+};
