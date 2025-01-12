@@ -1,0 +1,14 @@
+{
+  "name": "Convert Sticky to Square Shape",
+  "id": "1460154565115797352",
+  "api": "1.0.0",
+  "main": "code.js",
+  "enableProposedApi": false,
+  "documentAccess": "dynamic-page",
+  "editorType": ["figjam"],
+  "networkAccess": {
+    "allowedDomains": [
+      "none"
+    ]
+  }
+}
